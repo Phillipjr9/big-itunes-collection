@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop Women’s Clothing | Big ITunes Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header" data-active="shop"></div>
+
+  <main class="section" style="padding-top:2rem">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a> / <span>Shop</span>
+      </nav>
+
+      <div style="margin-bottom:1.5rem">
+        <h1 class="font-display" style="font-size:1.75rem;margin-bottom:0.25rem" id="shopTitle">Women’s Clothing</h1>
+        <p class="text-muted" style="font-size:0.9rem">Exclusive fashion made for her</p>
+      </div>
+
+      <div class="shop-layout">
+        <!-- Filters -->
+        <aside class="filters" id="filters">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h2 style="font-size:0.9rem;font-weight:600;font-family:var(--font-body)">Filters</h2>
+            <button id="clearFilters" class="btn-ghost" style="font-size:0.75rem;color:var(--blush-600)">Clear all</button>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">Category</div>
+            <label class="filter-option"><input type="checkbox" name="category" value="dresses" /> Dresses</label>
+            <label class="filter-option"><input type="checkbox" name="category" value="tops" /> Tops</label>
+            <label class="filter-option"><input type="checkbox" name="category" value="bottoms" /> Bottoms</label>
+            <label class="filter-option"><input type="checkbox" name="category" value="sets" /> Two-Piece Sets</label>
+            <label class="filter-option"><input type="checkbox" name="category" value="jumpsuits" /> Jumpsuits</label>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">Size</div>
+            <div class="size-filter" id="sizeFilters">
+              <button type="button" class="size-chip" data-size="XS">XS</button>
+              <button type="button" class="size-chip" data-size="S">S</button>
+              <button type="button" class="size-chip" data-size="M">M</button>
+              <button type="button" class="size-chip" data-size="L">L</button>
+              <button type="button" class="size-chip" data-size="XL">XL</button>
+              <button type="button" class="size-chip" data-size="XXL">XXL</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">Colour</div>
+            <div class="color-filter" id="colorFilters">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">Price (₦)</div>
+            <div class="price-range">
+              <input type="number" id="priceMin" class="form-input" placeholder="Min" min="0" step="1000" style="padding:0.5rem" />
+              <span style="color:#9CA3AF">–</span>
+              <input type="number" id="priceMax" class="form-input" placeholder="Max" min="0" step="1000" style="padding:0.5rem" />
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">Availability</div>
+            <label class="filter-option"><input type="checkbox" id="filterNew" /> New Arrivals</label>
+            <label class="filter-option"><input type="checkbox" id="filterSale" /> On Sale</label>
+            <label class="filter-option"><input type="checkbox" id="filterBestseller" /> Best Sellers</label>
+          </div>
+        </aside>
+
+        <!-- Products -->
+        <div>
+          <div class="shop-toolbar">
+            <span class="results-count" id="resultsCount">Showing 0 products</span>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <button id="mobileFilterBtn" class="btn btn-outline btn-sm" style="display:none">Filters</button>
+              <select id="sortSelect" class="sort-select">
+                <option value="featured">Featured</option>
+                <option value="newest">Newest</option>
+                <option value="bestselling">Best Selling</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
+          <div class="product-grid" id="productGrid"></div>
+          <div id="noResults" class="empty-state hidden">
+            <p>No products match your filters.</p>
+            <button class="btn btn-outline" style="margin-top:1rem" id="resetFilters">Reset filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    // Collect unique colors from products
+    const allColors = [];
+    PRODUCTS.forEach(p => {
+      p.colors.forEach(c => {
+        if (!allColors.find(x => x.hex === c.hex)) allColors.push(c);
+      });
+    });
+
+    const colorFiltersEl = document.getElementById("colorFilters");
+    colorFiltersEl.innerHTML = allColors.map(c =>
+      `<button type="button" class="color-swatch" data-hex="${c.hex}" style="background:${c.hex}" title="${c.name}"></button>`
+    ).join("");
+
+    // State
+    const state = {
+      categories: new Set(),
+      sizes: new Set(),
+      colors: new Set(),
+      minPrice: null,
+      maxPrice: null,
+      isNew: false,
+      isSale: false,
+      isBestseller: false,
+      sort: "featured"
+    };
+
+    // URL params
+    const params = new URLSearchParams(location.search);
+    if (params.get("category")) state.categories.add(params.get("category"));
+    if (params.get("new") === "1") state.isNew = true;
+    if (params.get("sale") === "1") state.isSale = true;
+
+    // Sync UI from state
+    function syncUI() {
+      document.querySelectorAll('input[name="category"]').forEach(el => {
+        el.checked = state.categories.has(el.value);
+      });
+      document.querySelectorAll(".size-chip").forEach(el => {
+        el.classList.toggle("active", state.sizes.has(el.dataset.size));
+      });
+      document.querySelectorAll(".color-swatch").forEach(el => {
+        el.classList.toggle("active", state.colors.has(el.dataset.hex));
+      });
+      document.getElementById("filterNew").checked = state.isNew;
+      document.getElementById("filterSale").checked = state.isSale;
+      document.getElementById("filterBestseller").checked = state.isBestseller;
+      document.getElementById("sortSelect").value = state.sort;
+
+      // Title
+      let title = "Women’s Clothing";
+      if (state.categories.size === 1) {
+        const cat = [...state.categories][0];
+        title = CATEGORIES.find(c => c.id === cat)?.name || title;
+      }
+      if (state.isNew) title = "New Arrivals";
+      if (state.isSale) title = "Sale";
+      document.getElementById("shopTitle").textContent = title;
+    }
+
+    function filterProducts() {
+      let list = [...PRODUCTS];
+
+      if (state.categories.size) {
+        list = list.filter(p => state.categories.has(p.category));
+      }
+      if (state.sizes.size) {
+        list = list.filter(p => p.sizes.some(s => state.sizes.has(s)));
+      }
+      if (state.colors.size) {
+        list = list.filter(p => p.colors.some(c => state.colors.has(c.hex)));
+      }
+      if (state.minPrice != null && state.minPrice !== "") {
+        list = list.filter(p => p.price >= Number(state.minPrice));
+      }
+      if (state.maxPrice != null && state.maxPrice !== "") {
+        list = list.filter(p => p.price <= Number(state.maxPrice));
+      }
+      if (state.isNew) list = list.filter(p => p.isNew);
+      if (state.isSale) list = list.filter(p => p.original && p.original > p.price);
+      if (state.isBestseller) list = list.filter(p => p.isBestseller);
+
+      // Sort
+      switch (state.sort) {
+        case "newest":
+          list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0) || b.id - a.id);
+          break;
+        case "bestselling":
+          list.sort((a, b) => (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0));
+          break;
+        case "price-asc":
+          list.sort((a, b) => a.price - b.price);
+          break;
+        case "price-desc":
+          list.sort((a, b) => b.price - a.price);
+          break;
+        default:
+          list.sort((a, b) => (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0) || (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+      }
+
+      return list;
+    }
+
+    function render() {
+      syncUI();
+      const list = filterProducts();
+      const grid = document.getElementById("productGrid");
+      const noRes = document.getElementById("noResults");
+      document.getElementById("resultsCount").textContent = `Showing ${list.length} product${list.length !== 1 ? "s" : ""}`;
+
+      if (list.length === 0) {
+        grid.innerHTML = "";
+        noRes.classList.remove("hidden");
+      } else {
+        noRes.classList.add("hidden");
+        grid.innerHTML = list.map(p => productCardHTML(p)).join("");
+      }
+    }
+
+    // Events
+    document.querySelectorAll('input[name="category"]').forEach(el => {
+      el.addEventListener("change", () => {
+        if (el.checked) state.categories.add(el.value);
+        else state.categories.delete(el.value);
+        render();
+      });
+    });
+
+    document.querySelectorAll(".size-chip").forEach(el => {
+      el.addEventListener("click", () => {
+        const s = el.dataset.size;
+        if (state.sizes.has(s)) state.sizes.delete(s);
+        else state.sizes.add(s);
+        render();
+      });
+    });
+
+    document.querySelectorAll(".color-swatch").forEach(el => {
+      el.addEventListener("click", () => {
+        const h = el.dataset.hex;
+        if (state.colors.has(h)) state.colors.delete(h);
+        else state.colors.add(h);
+        render();
+      });
+    });
+
+    document.getElementById("filterNew").addEventListener("change", e => { state.isNew = e.target.checked; render(); });
+    document.getElementById("filterSale").addEventListener("change", e => { state.isSale = e.target.checked; render(); });
+    document.getElementById("filterBestseller").addEventListener("change", e => { state.isBestseller = e.target.checked; render(); });
+    document.getElementById("sortSelect").addEventListener("change", e => { state.sort = e.target.value; render(); });
+
+    let priceTimer;
+    ["priceMin", "priceMax"].forEach(id => {
+      document.getElementById(id).addEventListener("input", e => {
+        clearTimeout(priceTimer);
+        priceTimer = setTimeout(() => {
+          state.minPrice = document.getElementById("priceMin").value;
+          state.maxPrice = document.getElementById("priceMax").value;
+          render();
+        }, 300);
+      });
+    });
+
+    function clearAll() {
+      state.categories.clear();
+      state.sizes.clear();
+      state.colors.clear();
+      state.minPrice = null;
+      state.maxPrice = null;
+      state.isNew = false;
+      state.isSale = false;
+      state.isBestseller = false;
+      state.sort = "featured";
+      document.getElementById("priceMin").value = "";
+      document.getElementById("priceMax").value = "";
+      render();
+    }
+    document.getElementById("clearFilters").onclick = clearAll;
+    document.getElementById("resetFilters").onclick = clearAll;
+
+    // Mobile filter toggle
+    if (window.innerWidth < 1024) {
+      document.getElementById("mobileFilterBtn").style.display = "";
+      document.getElementById("mobileFilterBtn").onclick = () => {
+        document.getElementById("filters").style.display =
+          document.getElementById("filters").style.display === "none" ? "" : "none";
+      };
+    }
+
+    render();
+  </script>
+</body>
+</html>
