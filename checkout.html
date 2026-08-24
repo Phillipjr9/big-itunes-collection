@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout | Big ITunes Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header" data-active=""></div>
+
+  <main class="section" style="padding-top:2rem">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a> / <a href="cart.html">Cart</a> / <span>Checkout</span>
+      </nav>
+      <h1 class="font-display" style="font-size:1.75rem;margin-bottom:1.5rem">Checkout</h1>
+
+      <div id="checkoutEmpty" class="empty-state hidden">
+        <p>Your cart is empty.</p>
+        <a href="shop.html" class="btn btn-primary" style="margin-top:1rem">Shop Now</a>
+      </div>
+
+      <form id="checkoutForm" class="checkout-layout">
+        <div>
+          <div class="checkout-section">
+            <h3>Contact Information</h3>
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="name" required class="form-input" placeholder="Your full name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" name="phone" required class="form-input" placeholder="e.g. 0803 123 4567" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" required class="form-input" placeholder="you@email.com" />
+            </div>
+          </div>
+
+          <div class="checkout-section">
+            <h3>Delivery Information</h3>
+            <div class="form-group">
+              <label class="form-label">State *</label>
+              <select name="state" id="stateSelect" required class="form-select">
+                <option value="">Select State</option>
+                <option value="Lagos">Lagos</option>
+                <option value="Abuja (FCT)">Abuja (FCT)</option>
+                <option value="Port Harcourt (Rivers)">Port Harcourt (Rivers)</option>
+                <option value="Ibadan (Oyo)">Ibadan (Oyo)</option>
+                <option value="Enugu">Enugu</option>
+                <option value="Kano">Kano</option>
+                <option value="Benin City (Edo)">Benin City (Edo)</option>
+                <option value="Other (Nationwide)">Other (Nationwide)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">City *</label>
+              <input type="text" name="city" required class="form-input" placeholder="City" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Delivery Address *</label>
+              <input type="text" name="address" required class="form-input" placeholder="Street address, building, apartment" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Landmark</label>
+              <input type="text" name="landmark" class="form-input" placeholder="Nearby landmark (optional)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Delivery Instructions</label>
+              <textarea name="instructions" rows="2" class="form-textarea" placeholder="Any special instructions (optional)"></textarea>
+            </div>
+            <div id="deliveryEstimate" style="font-size:0.85rem;color:#4B5563;background:var(--blush-50);padding:0.75rem 1rem;border-radius:0.75rem;display:none">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+
+          <div class="checkout-section">
+            <h3>Payment Method</h3>
+            <p style="font-size:0.8rem;color:#6B7280;margin-bottom:1rem">Payment structure ready for Nigerian gateways (Paystack, Flutterwave, etc.). No live payment is processed in this demo.</p>
+            <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;border:1px solid #E5E7EB;border-radius:0.75rem;margin-bottom:0.5rem;cursor:pointer">
+              <input type="radio" name="payment" value="pod" checked style="accent-color:var(--blush-500)" />
+              <span style="font-size:0.875rem">Pay on Delivery / Bank Transfer</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;border:1px solid #E5E7EB;border-radius:0.75rem;cursor:pointer">
+              <input type="radio" name="payment" value="card" style="accent-color:var(--blush-500)" />
+              <span style="font-size:0.875rem">Card / Online Payment (gateway-ready)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <div class="cart-summary" id="orderSummary">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const cart = getCart();
+    if (cart.length === 0) {
+      document.getElementById("checkoutEmpty").classList.remove("hidden");
+      document.getElementById("checkoutForm").classList.add("hidden");
+    } else {
+      function updateSummary() {
+        const state = document.getElementById("stateSelect").value;
+        const subtotal = getCartSubtotal();
+        const delivery = getDeliveryFee(state);
+        const total = subtotal + delivery;
+        const freeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
+
+        const est = document.getElementById("deliveryEstimate");
+        if (state) {
+          est.style.display = "block";
+          const days = state === "Lagos" ? "1–3" : state.includes("Abuja") || state.includes("Ibadan") ? "2–4" : "3–6";
+          est.innerHTML = `
+            <strong>Delivery to ${state}:</strong> ${freeShip ? "FREE" : formatPrice(delivery)} · Estimated ${days} business days
+          `;
+        } else {
+          est.style.display = "none";
+        }
+
+        document.getElementById("orderSummary").innerHTML = `
+          <h3 style="font-family:var(--font-body);font-weight:600;margin-bottom:1rem">Order Summary</h3>
+          <div style="max-height:220px;overflow-y:auto;margin-bottom:1rem">
+            ${cart.map(i => `
+              <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;font-size:0.8rem">
+                <img src="${i.image}" alt="" style="width:3.5rem;height:4.25rem;object-fit:cover;border-radius:0.5rem" />
+                <div style="flex:1">
+                  <p style="font-weight:500">${i.name}</p>
+                  <p style="color:#6B7280">${i.size} · ${i.colorName || ""} × ${i.qty}</p>
+                  <p style="font-weight:600;color:var(--blush-600)">${formatPrice(i.price * i.qty)}</p>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+          <div class="summary-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
+          <div class="summary-row">
+            <span>Delivery ${state ? `(${state})` : ""}</span>
+            <span>${!state ? "Select state" : freeShip ? "FREE" : formatPrice(delivery)}</span>
+          </div>
+          ${freeShip ? '<p style="font-size:0.75rem;color:#065F46;margin-bottom:0.5rem">🎉 Free nationwide delivery unlocked</p>' : ""}
+          <div class="summary-total"><span>Total</span><span id="grandTotal">${formatPrice(total)}</span></div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.25rem">Place Order</button>
+          <p style="font-size:0.7rem;color:#9CA3AF;text-align:center;margin-top:0.75rem">You will receive order confirmation via SMS/email</p>
+        `;
+      }
+
+      document.getElementById("stateSelect").addEventListener("change", updateSummary);
+      updateSummary();
+
+      document.getElementById("checkoutForm").onsubmit = (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const state = fd.get("state");
+        const subtotal = getCartSubtotal();
+        const delivery = getDeliveryFee(state);
+        const order = {
+          id: "BITC-" + Date.now().toString(36).toUpperCase(),
+          date: new Date().toISOString(),
+          items: getCart(),
+          customer: {
+            name: fd.get("name"),
+            phone: fd.get("phone"),
+            email: fd.get("email")
+          },
+          delivery: {
+            state,
+            city: fd.get("city"),
+            address: fd.get("address"),
+            landmark: fd.get("landmark"),
+            instructions: fd.get("instructions"),
+            fee: delivery
+          },
+          payment: fd.get("payment"),
+          subtotal,
+          total: subtotal + delivery,
+          status: "Processing",
+          statusHistory: [{
+            status: "Processing",
+            at: new Date().toISOString(),
+            by: "System",
+            note: "Order placed"
+          }]
+        };
+
+        const orders = getOrders();
+        orders.unshift(order);
+        saveOrders(orders);
+
+        // Deduct inventory for purchased sizes
+        if (typeof deductStockForOrder === "function") {
+          deductStockForOrder(order.items, order.id);
+        }
+
+        // Clear cart
+        saveCart([]);
+        updateNavBadges();
+
+        // Redirect to confirmation via account
+        sessionStorage.setItem("lastOrderId", order.id);
+        location.href = "account.html?order=" + order.id;
+      };
+    }
+  </script>
+</body>
+</html>
