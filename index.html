@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Big ITunes Collection | Exclusive Women’s Fashion</title>
+  <meta name="description" content="Big ITunes Collection — Premium Nigerian women’s clothing. Style made for her." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 40%, #FFF1F2 70%, #FDF8F5 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 12s ease infinite;
+      position: relative;
+      overflow: hidden;
+      padding: 3.5rem 0 4rem;
+    }
+    @media (min-width: 1024px) { .hero { padding: 5rem 0; } }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .hero-grid {
+      display: grid;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (min-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr 1fr; gap: 3rem; }
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      line-height: 1.1;
+      margin: 0.75rem 0 1rem;
+    }
+    @media (min-width: 640px) { .hero h1 { font-size: 3.25rem; } }
+    @media (min-width: 1024px) { .hero h1 { font-size: 3.75rem; } }
+    .hero-img-wrap {
+      position: relative;
+      aspect-ratio: 4/5;
+      max-width: 28rem;
+      margin: 0 auto;
+    }
+    .hero-img-wrap > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(236,72,153,0.2);
+    }
+    .float-card {
+      position: absolute;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-lg);
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    @media (min-width: 768px) { .cat-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+    @media (min-width: 1024px) { .cat-grid { grid-template-columns: repeat(6, 1fr); } }
+    .cat-card {
+      position: relative;
+      aspect-ratio: 3/4;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .cat-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s cubic-bezier(0.22,1,0.36,1);
+    }
+    .cat-card:hover img { transform: scale(1.08); }
+    .cat-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%);
+    }
+    .cat-card-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      color: white;
+      z-index: 1;
+    }
+    .look-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    @media (min-width: 768px) { .look-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .look-grid { grid-template-columns: repeat(4, 1fr); } }
+    .look-card {
+      position: relative;
+      aspect-ratio: 3/4;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    .look-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+    .look-card:hover img { transform: scale(1.05); }
+    .look-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 55%);
+    }
+    .look-card span {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      color: white;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      z-index: 1;
+    }
+    .collection-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) { .collection-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .collection-grid { grid-template-columns: repeat(3, 1fr); } }
+    .collection-card {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .collection-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+    .collection-card:hover img { transform: scale(1.05); }
+    .collection-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%);
+    }
+    .collection-card-body {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.25rem;
+      color: white;
+      z-index: 1;
+    }
+    .newsletter {
+      background: linear-gradient(135deg, var(--blush-500), var(--rose-500));
+      color: white;
+      padding: 3.5rem 0;
+      text-align: center;
+    }
+    .newsletter-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 28rem;
+      margin: 1.5rem auto 0;
+    }
+    @media (min-width: 640px) {
+      .newsletter-form { flex-direction: row; }
+    }
+    .newsletter-form input {
+      flex: 1;
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: 0.9rem;
+    }
+    .newsletter-form input:focus { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+  <div id="site-header" data-active="home"></div>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <p style="font-size:0.75rem;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--blush-600)">Nigerian Women’s Fashion</p>
+          <h1 class="font-display">Style Made<br />for <em style="color:var(--blush-600)">Her.</em></h1>
+          <p style="color:#4B5563;font-size:1.05rem;max-width:26rem;line-height:1.65;margin-bottom:1.5rem">
+            Discover beautiful women’s fashion designed to make every woman feel confident, stylish, and effortlessly beautiful.
+          </p>
+          <div style="display:flex;flex-wrap:wrap;gap:0.75rem">
+            <a href="shop.html" class="btn btn-primary btn-lg">Shop Women’s Collection</a>
+            <a href="shop.html?new=1" class="btn btn-outline btn-lg">Explore New Arrivals</a>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-top:1.5rem;font-size:0.85rem;color:#6B7280">
+            <span>★ 4.9 · 2,400+ reviews</span>
+            <span style="width:1px;height:1rem;background:#D1D5DB"></span>
+            <span>Nationwide delivery</span>
+          </div>
+        </div>
+        <div class="hero-img-wrap">
+          <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80" alt="Woman in elegant fashion" />
+          <div class="float-card" style="bottom:-0.5rem;left:-0.5rem;max-width:11rem">
+            <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=100&q=80" alt="" style="width:3.25rem;height:3.25rem;border-radius:0.6rem;object-fit:cover" />
+            <div>
+              <p style="font-size:0.7rem;font-weight:500;line-height:1.2">Silk Midi Dress</p>
+              <p style="font-size:0.85rem;font-weight:600;color:var(--blush-600)">₦28,500</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-white">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-label">Shop by Category</p>
+        <h2 class="section-title">Made for Every Mood</h2>
+      </div>
+      <div class="cat-grid">
+        <a href="shop.html?category=dresses" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&q=80" alt="Dresses" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Dresses</strong><br /><span style="font-size:0.7rem;opacity:0.85">Casual · Party · Maxi</span></div>
+        </a>
+        <a href="shop.html?category=tops" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&q=80" alt="Tops" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Tops</strong><br /><span style="font-size:0.7rem;opacity:0.85">Blouses · Crop · Elegant</span></div>
+        </a>
+        <a href="shop.html?category=bottoms" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400&q=80" alt="Skirts" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Skirts</strong><br /><span style="font-size:0.7rem;opacity:0.85">Midi · Mini · Pleated</span></div>
+        </a>
+        <a href="shop.html?category=bottoms" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=400&q=80" alt="Trousers" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Trousers</strong><br /><span style="font-size:0.7rem;opacity:0.85">Tailored · Wide · Jeans</span></div>
+        </a>
+        <a href="shop.html?category=sets" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&q=80" alt="Sets" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Two-Piece Sets</strong><br /><span style="font-size:0.7rem;opacity:0.85">Matching · Coordinated</span></div>
+        </a>
+        <a href="shop.html?category=jumpsuits" class="cat-card">
+          <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&q=80" alt="Jumpsuits" />
+          <div class="cat-card-label"><strong class="font-display" style="font-size:1.1rem">Jumpsuits</strong><br /><span style="font-size:0.7rem;opacity:0.85">Casual · Elegant</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-soft">
+    <div class="container">
+      <div style="display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:1rem;margin-bottom:2rem">
+        <div>
+          <p class="section-label">The Big ITunes Collection</p>
+          <h2 class="section-title" style="text-align:left">Most Loved Pieces</h2>
+        </div>
+        <a href="shop.html" class="btn btn-ghost">View all →</a>
+      </div>
+      <div class="product-grid" id="featuredGrid"></div>
+    </div>
+  </section>
+
+  <section class="section bg-white">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-label">Just Dropped</p>
+        <h2 class="section-title">New Arrivals ✨</h2>
+        <p style="color:#6B7280;margin-top:0.5rem;max-width:24rem;margin-left:auto;margin-right:auto">Fresh styles for the woman who loves to stand out.</p>
+      </div>
+      <div class="product-grid" id="newGrid"></div>
+      <div style="text-align:center;margin-top:2rem">
+        <a href="shop.html?new=1" class="btn btn-outline">Shop All New Arrivals</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-cream">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-label">Style Inspiration</p>
+        <h2 class="section-title">Find Your Style</h2>
+      </div>
+      <div class="look-grid">
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80" alt="" /><span>Everyday Chic</span></a>
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=500&q=80" alt="" /><span>Weekend Style</span></a>
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=500&q=80" alt="" /><span>Dinner Date</span></a>
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&q=80" alt="" /><span>Office Elegance</span></a>
+        <a href="shop.html?category=dresses" class="look-card"><img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&q=80" alt="" /><span>Party Ready</span></a>
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80" alt="" /><span>Vacation Style</span></a>
+        <a href="shop.html" class="look-card"><img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=500&q=80" alt="" /><span>Effortlessly Feminine</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-soft" id="collections">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-label">Curated for You</p>
+        <h2 class="section-title">Special Women’s Collections</h2>
+      </div>
+      <div class="collection-grid">
+        <a href="shop.html" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Everyday Woman</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Comfortable & stylish everyday clothing</p></div>
+        </a>
+        <a href="shop.html" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Boss Woman</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Elegant office & professional fashion</p></div>
+        </a>
+        <a href="shop.html?category=dresses" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Date Night</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Beautiful feminine outfits for special occasions</p></div>
+        </a>
+        <a href="shop.html" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Weekend Mood</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Relaxed but fashionable casual clothing</p></div>
+        </a>
+        <a href="shop.html?sale=1" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Party Edit</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Statement pieces for celebrations & events</p></div>
+        </a>
+        <a href="shop.html" class="collection-card">
+          <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80" alt="" />
+          <div class="collection-card-body"><h3 class="font-display" style="font-size:1.25rem">Vacation Edit</h3><p style="font-size:0.8rem;opacity:0.85;margin-top:0.2rem">Stylish clothing for holidays & getaways</p></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-white" id="about">
+    <div class="container" style="max-width:42rem;text-align:center">
+      <p class="section-label">Our Story</p>
+      <h2 class="section-title" style="margin-bottom:1.25rem">Made for Her.<br />Styled by Her.</h2>
+      <p style="color:#4B5563;font-size:1.05rem;line-height:1.7">
+        Big ITunes Collection is a Nigerian women’s fashion brand created around confidence, individuality, femininity, and personal style. We believe every woman deserves clothing that makes her feel seen, celebrated, and unapologetically herself.
+      </p>
+      <p style="color:#6B7280;margin-top:1rem">From Lagos to every corner of Nigeria — a boutique that feels like home for the modern African woman.</p>
+    </div>
+  </section>
+
+  <section class="section bg-cream" id="size-guide">
+    <div class="container" style="max-width:48rem">
+      <div class="section-header">
+        <p class="section-label">Fit Guide</p>
+        <h2 class="section-title">Women’s Size Guide</h2>
+        <p style="color:#6B7280;margin-top:0.5rem">Not sure about your size? Check our size guide before ordering.</p>
+      </div>
+      <div style="background:white;border-radius:1rem;border:1px solid var(--border);overflow:hidden;overflow-x:auto">
+        <table style="width:100%;min-width:480px;border-collapse:collapse;font-size:0.875rem;text-align:center">
+          <thead>
+            <tr style="background:var(--blush-100);color:var(--blush-800)">
+              <th style="padding:0.75rem 1rem">Size</th>
+              <th style="padding:0.75rem 1rem">Bust (in)</th>
+              <th style="padding:0.75rem 1rem">Waist (in)</th>
+              <th style="padding:0.75rem 1rem">Hips (in)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:0.65rem;font-weight:500">XS</td><td>32–33</td><td>24–25</td><td>34–35</td></tr>
+            <tr style="background:var(--softpink)"><td style="padding:0.65rem;font-weight:500">S</td><td>34–35</td><td>26–27</td><td>36–37</td></tr>
+            <tr><td style="padding:0.65rem;font-weight:500">M</td><td>36–37</td><td>28–29</td><td>38–39</td></tr>
+            <tr style="background:var(--softpink)"><td style="padding:0.65rem;font-weight:500">L</td><td>38–40</td><td>30–32</td><td>40–42</td></tr>
+            <tr><td style="padding:0.65rem;font-weight:500">XL</td><td>41–43</td><td>33–35</td><td>43–45</td></tr>
+            <tr style="background:var(--softpink)"><td style="padding:0.65rem;font-weight:500">XXL</td><td>44–46</td><td>36–38</td><td>46–48</td></tr>
+            <tr><td style="padding:0.65rem;font-weight:500">XXXL</td><td>47–49</td><td>39–41</td><td>49–51</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="newsletter">
+    <div class="container">
+      <h2 class="font-display" style="font-size:1.75rem;margin-bottom:0.5rem">Don’t Miss Your Next Favorite Look 💕</h2>
+      <p style="opacity:0.9;max-width:28rem;margin:0 auto">Subscribe for new arrivals, exclusive offers, styling inspiration, and special collections.</p>
+      <form class="newsletter-form" id="newsletterForm">
+        <input type="email" required placeholder="Your email address" />
+        <button type="submit" class="btn" style="background:white;color:var(--blush-600);font-weight:600">Subscribe</button>
+      </form>
+      <p style="font-size:0.75rem;opacity:0.7;margin-top:1rem">We respect your inbox. Unsubscribe anytime.</p>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const featured = PRODUCTS.filter(p => p.isBestseller || p.isNew).slice(0, 4);
+    const news = PRODUCTS.filter(p => p.isNew).slice(0, 4);
+    document.getElementById("featuredGrid").innerHTML = featured.map(p => productCardHTML(p)).join("");
+    document.getElementById("newGrid").innerHTML = news.map(p => productCardHTML(p)).join("");
+
+    document.getElementById("newsletterForm").onsubmit = e => {
+      e.preventDefault();
+      showToast("Thanks for subscribing! 💕");
+      e.target.reset();
+    };
+  </script>
+</body>
+</html>
