@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wishlist | Big ITunes Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="site-header" data-active=""></div>
+
+  <main class="section" style="padding-top:2rem">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a> / <span>Wishlist</span>
+      </nav>
+      <h1 class="font-display" style="font-size:1.75rem;margin-bottom:0.5rem">Your Wishlist</h1>
+      <p class="text-muted" style="font-size:0.9rem;margin-bottom:1.5rem" id="wishCountLabel"></p>
+
+      <div class="product-grid" id="wishGrid"></div>
+      <div id="wishEmpty" class="empty-state hidden">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        <p>Your wishlist is empty</p>
+        <a href="shop.html" class="btn btn-primary" style="margin-top:1rem">Discover Pieces You’ll Love</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    function renderWishlist() {
+      const ids = getWishlist();
+      const items = PRODUCTS.filter(p => ids.includes(p.id));
+      document.getElementById("wishCountLabel").textContent =
+        items.length ? `${items.length} item${items.length !== 1 ? "s" : ""} saved` : "";
+
+      if (items.length === 0) {
+        document.getElementById("wishGrid").innerHTML = "";
+        document.getElementById("wishEmpty").classList.remove("hidden");
+      } else {
+        document.getElementById("wishEmpty").classList.add("hidden");
+        document.getElementById("wishGrid").innerHTML = items.map(p => productCardHTML(p)).join("");
+      }
+    }
+
+    // Override toggle to re-render
+    const orig = window.bitcToggleWish;
+    window.bitcToggleWish = function(id) {
+      orig(id);
+      renderWishlist();
+    };
+
+    renderWishlist();
+  </script>
+</body>
+</html>
