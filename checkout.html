@@ -106,6 +106,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/common.js"></script>
+  <script src="js/payment.js"></script>
   <script>
     const cart = getCart();
     if (cart.length === 0) {
@@ -159,36 +160,22 @@
       document.getElementById("stateSelect").addEventListener("change", updateSummary);
       updateSummary();
 
-      document.getElementById("checkoutForm").onsubmit = (e) => {
+      document.getElementById("checkoutForm").onsubmit = async (e) => {
         e.preventDefault();
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
-        // Trigger animated feedback on the button
         if (submitBtn) {
           submitBtn.disabled = true;
           submitBtn.classList.add('truck');
+          submitBtn.dataset.original = submitBtn.innerHTML;
           submitBtn.innerHTML = `
-            <span class="truck-icon" aria-hidden="true">
-              <svg width="34" height="20" viewBox="0 0 34 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="3" width="18" height="10" rx="1.6" fill="white" />
-                <rect x="20" y="6" width="11" height="7" rx="1.1" fill="white" />
-                <g transform="translate(4,14)">
-                  <circle class="wheel_spin" cx="0" cy="0" r="2.6" fill="#FFFFFF" stroke="#F472B6" stroke-width="0.5" />
-                </g>
-                <g transform="translate(24,14)">
-                  <circle class="wheel_spin" cx="0" cy="0" r="2.6" fill="#FFFFFF" stroke="#F472B6" stroke-width="0.5" />
-                </g>
-              </svg>
-            </span>
-            <span class="atclabel">Placing order…</span>
+            <span class="truck-icon" aria-hidden="true">Processing…</span>
           `;
-          // Add rolling wheels if present via CSS class 'wheel_spin' on decorative elements
           document.body.classList.add('is-rolling');
-          // Keep loading visuals confined to the button itself (no fullscreen overlay)
         }
 
         // Small delay to show animation, then perform order logic
-        setTimeout(() => {
+        setTimeout(async () => {
           const latestCart = getCart();
           const stockIssue = latestCart.find(i => {
             const available = typeof getStockForSize === "function" ? getStockForSize(i.id, i.size) : null;
@@ -230,15 +217,50 @@
             payment: fd.get("payment"),
             subtotal,
             total: subtotal + delivery,
-            status: "Processing",
+            status: "pending",
             statusHistory: [{
-              status: "Processing",
+              status: "pending",
               at: new Date().toISOString(),
               by: "System",
               note: "Order placed"
             }]
           };
 
+          if (order.payment === 'card') {
+            // For online payments, persist order locally as pending and redirect to payment provider
+            const orders = getOrders();
+            orders.unshift(order);
+            saveOrders(orders);
+
+            try {
+              // disable UI to prevent duplicates
+              if (typeof disableSubmitButton === 'function') disableSubmitButton(form);
+              const resp = await createPayment(order.id, order.total, order.customer.email);
+              // store returned reference if present
+              const ordersNow = getOrders();
+              const idx = ordersNow.findIndex(o => o.id === order.id);
+              if (idx !== -1) {
+                ordersNow[idx].paystack = { reference: resp.reference };
+                ordersNow[idx].status = 'processing';
+                saveOrders(ordersNow);
+              }
+              // Redirect customer to Paystack checkout
+              window.location.href = resp.authorization_url;
+              return;
+            } catch (err) {
+              if (typeof enableSubmitButton === 'function') enableSubmitButton(form);
+              document.body.classList.remove('is-rolling');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('truck');
+                submitBtn.textContent = 'Place Order';
+              }
+              showToast(err && err.error ? err.error : 'Payment initialization failed. Please try again.');
+              return;
+            }
+          }
+
+          // Pay on delivery / bank transfer flow (no online payment)
           const orders = getOrders();
           orders.unshift(order);
           saveOrders(orders);
