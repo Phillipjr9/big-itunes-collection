@@ -16,7 +16,10 @@
       <nav class="breadcrumb">
         <a href="index.html">Home</a> / <span>Wishlist</span>
       </nav>
-      <h1 class="font-display" style="font-size:1.75rem;margin-bottom:0.5rem">Your Wishlist</h1>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+        <h1 class="font-display" style="font-size:1.75rem;margin-bottom:0.5rem">Your Wishlist</h1>
+        <button id="moveAllToCartBtn" class="btn btn-outline btn-sm hidden">Move All to Cart</button>
+      </div>
       <p class="text-muted" style="font-size:0.9rem;margin-bottom:1.5rem" id="wishCountLabel"></p>
 
       <div class="product-grid" id="wishGrid"></div>
@@ -40,6 +43,9 @@
       document.getElementById("wishCountLabel").textContent =
         items.length ? `${items.length} item${items.length !== 1 ? "s" : ""} saved` : "";
 
+      const moveBtn = document.getElementById("moveAllToCartBtn");
+      moveBtn.classList.toggle("hidden", items.length === 0);
+
       if (items.length === 0) {
         document.getElementById("wishGrid").innerHTML = "";
         document.getElementById("wishEmpty").classList.remove("hidden");
@@ -48,6 +54,34 @@
         document.getElementById("wishGrid").innerHTML = items.map(p => productCardHTML(p)).join("");
       }
     }
+
+    function firstAvailableSize(product) {
+      if (!product.stock) return product.sizes?.[0] || null;
+      const sizeList = product.sizes?.length ? product.sizes : Object.keys(product.stock);
+      return sizeList.find(s => Number(product.stock[s]) > 0) || null;
+    }
+
+    document.getElementById("moveAllToCartBtn").onclick = () => {
+      const ids = getWishlist();
+      const items = PRODUCTS.filter(p => ids.includes(p.id));
+      let moved = 0;
+      let skipped = 0;
+      const remaining = [];
+
+      items.forEach(p => {
+        const size = firstAvailableSize(p);
+        if (!size) { skipped++; remaining.push(p.id); return; }
+        addToCart(p.id, size, p.colors?.[0]?.hex, 1);
+        moved++;
+      });
+
+      saveWishlist(remaining);
+      renderWishlist();
+
+      if (moved && !skipped) showToast(`Moved ${moved} item${moved !== 1 ? "s" : ""} to cart`);
+      else if (moved && skipped) showToast(`Moved ${moved} item${moved !== 1 ? "s" : ""}, ${skipped} out of stock`);
+      else showToast("All wishlist items are out of stock");
+    };
 
     // Override toggle to re-render
     const orig = window.bitcToggleWish;

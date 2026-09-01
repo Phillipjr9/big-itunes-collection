@@ -8,25 +8,104 @@
 </head>
 <body>
   <div id="site-header" data-active=""></div>
-  <main class="section">
-    <div class="container" style="max-width:54rem">
+
+  <main class="section" style="padding-top:1.5rem">
+    <div class="container" style="max-width:64rem">
       <nav class="breadcrumb"><a href="index.html">Home</a> / <span>Admin</span></nav>
-      <h1 class="font-display">Admin Dashboard (Demo)</h1>
-      <p style="color:var(--muted);margin-top:0.5rem">This is a demo admin page. Use the demo accounts listed in README to sign in (no backend in this demo).</p>
-      <form id="adminLogin" style="max-width:28rem;margin-top:1rem">
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-input" placeholder="admin@bigitunescollection.com" />
+
+      <!-- Login -->
+      <div id="loginScreen">
+        <h1 class="font-display">Admin Dashboard</h1>
+        <p style="color:var(--muted);margin:0.5rem 0 1.25rem">Demo accounts: admin@bigitunescollection.com / admin123 · manager@bigitunescollection.com / manager123 · staff@bigitunescollection.com / staff123</p>
+        <form id="loginForm" style="max-width:26rem">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="admin@bigitunescollection.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="admin123" required />
+          </div>
+          <button class="btn btn-primary btn-block">Sign In</button>
+        </form>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" class="hidden admin-shell">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <aside class="admin-sidebar" id="adminSidebar">
+          <div class="admin-user">
+            <div style="font-weight:600" id="adminNameLabel"></div>
+            <span class="badge badge-soft" id="adminRoleBadge"></span>
+          </div>
+          <nav class="admin-nav">
+            <a href="#" data-view="overview" class="active">Overview</a>
+            <a href="#" data-view="orders">Orders</a>
+            <a href="#" data-view="products">Products &amp; Inventory</a>
+            <a href="#" data-view="settings">Settings</a>
+          </nav>
+          <button id="logoutBtn" class="btn btn-outline btn-block" style="margin-top:1rem">Log Out</button>
+        </aside>
+
+        <div class="admin-content">
+          <div class="admin-topbar">
+            <button id="openSidebarBtn" class="btn btn-outline btn-sm admin-menu-btn">☰</button>
+            <h2 id="pageTitle">Overview</h2>
+          </div>
+
+          <div class="admin-view" id="view-overview">
+            <div class="stat-grid" id="statsGrid"></div>
+          </div>
+
+          <div class="admin-view hidden" id="view-orders">
+            <div class="admin-toolbar">
+              <select id="orderStatusFilter" class="form-select" style="max-width:12rem">
+                <option value="">All statuses</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+              <div id="ordersEmpty" class="empty-state hidden"><p>No orders yet</p></div>
+            </div>
+          </div>
+
+          <div class="admin-view hidden" id="view-products">
+            <div class="admin-toolbar">
+              <input type="search" id="productSearch" class="form-input" placeholder="Search products" style="max-width:16rem" />
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th></tr></thead>
+                <tbody id="productsBody"></tbody>
+              </table>
+              <div id="productsEmpty" class="empty-state hidden"><p>No products found</p></div>
+            </div>
+          </div>
+
+          <div class="admin-view hidden" id="view-settings">
+            <div class="admin-panel">
+              <div class="form-group" style="max-width:16rem">
+                <label class="form-label">Low stock threshold</label>
+                <input type="number" id="settingLowStock" class="form-input" min="0" />
+              </div>
+              <button id="saveSettingsBtn" class="btn btn-primary" data-edit-only>Save Settings</button>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-input" placeholder="admin123" />
-        </div>
-        <button class="btn btn-primary">Sign In</button>
-      </form>
+      </div>
     </div>
   </main>
+
   <div id="site-footer"></div>
+  <script src="js/data.js"></script>
   <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>
