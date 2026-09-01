@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { PaymentPendingLottie } from '@/components/PaymentPendingLottie'
 import { PaymentSuccessLottie } from '@/components/PaymentSuccessLottie'
+import { PaymentFailedLottie } from '@/components/PaymentFailedLottie'
 import { StoreChrome } from '@/components/storefront/StoreChrome'
 import { useShop } from '@/context/ShopContext'
 import { useOrderLiveStatus } from '@/hooks/useOrderLiveStatus'
@@ -58,6 +59,7 @@ function OrderPage() {
 
   const paymentStatus = live?.paymentStatus || order?.paymentStatus
   const orderStatus = (live?.status as OrderStatus | undefined) || order?.status
+  const failed = paymentStatus === 'failed'
 
   const wa = order
     ? whatsappUrl(
@@ -119,6 +121,8 @@ function OrderPage() {
         <div className="mx-auto mb-2 flex justify-center">
           {paid ? (
             <PaymentSuccessLottie className="h-44 w-full max-w-sm sm:h-52" />
+          ) : failed ? (
+            <PaymentFailedLottie className="h-44 w-full max-w-sm sm:h-52" />
           ) : (
             <PaymentPendingLottie className="h-44 w-full max-w-sm sm:h-52" />
           )}
@@ -126,10 +130,10 @@ function OrderPage() {
 
         <p
           className={`text-center font-mono text-[10px] uppercase tracking-[0.16em] ${
-            paid ? 'text-emerald-600' : 'text-amber-600'
+            paid ? 'text-emerald-600' : failed ? 'text-destructive' : 'text-amber-600'
           }`}
         >
-          {paid ? 'Payment successful' : 'Payment pending'}
+          {paid ? 'Payment successful' : failed ? 'Payment failed' : 'Payment pending'}
           {live && !paid ? ' · live' : ''}
         </p>
         <h1 className="mt-2 text-center font-serif text-4xl">

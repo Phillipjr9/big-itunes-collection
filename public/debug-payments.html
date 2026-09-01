@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Payment Lottie Debug (Static)</title>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding: 24px; }
+      .row { display:flex; gap:24px; align-items:center; }
+      .card { width:160px; height:160px; display:flex; align-items:center; justify-content:center; background:#f8fafc; border-radius:12px; box-shadow:0 1px 6px rgba(2,6,23,0.06); }
+      h1{font-size:18px;margin-bottom:12px}
+    </style>
+  </head>
+  <body>
+    <h1>Payment Lottie Debug (static)</h1>
+
+    <section>
+      <h2>Pending</h2>
+      <div class="row">
+        <div class="card">
+          <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_p8bfn5to.json" background="transparent" speed="1" style="width:140px; height:140px;" loop autoplay></lottie-player>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Success</h2>
+      <div class="row">
+        <div class="card">
+          <lottie-player src="https://lottie.host/b9a76785-4f9c-4402-aa96-60e84c21e73e/kvGQgAh5Fp.json" background="transparent" speed="1" style="width:160px; height:160px;" loop autoplay></lottie-player>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Failed</h2>
+      <div class="row">
+        <div class="card">
+          <lottie-player src="https://assets10.lottiefiles.com/packages/lf20_qpwbiyxf.json" background="transparent" speed="1" style="width:140px; height:140px;" loop autoplay></lottie-player>
+        </div>
+      </div>
+    </section>
+
+  </body>
+</html>

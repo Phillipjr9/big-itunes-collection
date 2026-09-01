@@ -5,6 +5,8 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [tailwindcss(), viteReact()],
+  // Ensure plain HTML files are treated as assets for import analysis
+  assetsInclude: ['**/*.html'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
