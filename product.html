@@ -124,7 +124,7 @@
               <p><strong>Fabric:</strong> ${product.fabric}</p>
               <p><strong>Care:</strong> ${product.care}</p>
               <p style="margin-top:0.75rem">Delivery across Lagos, Abuja, Port Harcourt, Ibadan, Enugu, Kano, Benin City & nationwide. Free delivery on orders over ₦45,000.</p>
-              <p style="margin-top:0.5rem">Easy returns within 7 days. <a href="#">Returns policy</a></p>
+              <p style="margin-top:0.5rem">Easy returns within 7 days. <a href="returns.html">Returns policy</a></p>
             </div>
           </div>
         `;
@@ -153,18 +153,42 @@
         });
 
         document.getElementById("qtyMinus").onclick = () => { if (qty > 1) { qty--; document.getElementById("qtyVal").textContent = qty; } };
-        document.getElementById("qtyPlus").onclick = () => { qty++; document.getElementById("qtyVal").textContent = qty; };
+        document.getElementById("qtyPlus").onclick = () => {
+          const available = Number(product.stock?.[selectedSize]);
+          if (Number.isFinite(available) && qty >= available) {
+            showToast(`Only ${available} left in ${selectedSize}`);
+            return;
+          }
+          qty++;
+          document.getElementById("qtyVal").textContent = qty;
+        };
 
         document.getElementById("addCartBtn").onclick = () => {
+          const available = Number(product.stock?.[selectedSize]);
+          if (Number.isFinite(available) && available < 1) {
+            showToast(`Size ${selectedSize} is out of stock`);
+            return;
+          }
           addToCart(product.id, selectedSize, selectedColor.hex, qty);
         };
         document.getElementById("buyNowBtn").onclick = () => {
+          const available = Number(product.stock?.[selectedSize]);
+          if (Number.isFinite(available) && available < 1) {
+            showToast(`Size ${selectedSize} is out of stock`);
+            return;
+          }
           addToCart(product.id, selectedSize, selectedColor.hex, qty);
           location.href = "checkout.html";
         };
         document.getElementById("wishBtn").onclick = () => {
           window.bitcToggleWish(product.id);
           renderPDP();
+          const btn = document.getElementById("wishBtn");
+          if (btn) {
+            btn.classList.remove("pop");
+            void btn.offsetWidth;
+            btn.classList.add("pop");
+          }
         };
       }
 

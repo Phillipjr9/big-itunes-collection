@@ -401,14 +401,39 @@ function getDiscount(p) {
 }
 
 // ---------- Cart operations ----------
+function getStockForSize(productId, size) {
+  const p = PRODUCTS.find(x => x.id === productId);
+  if (!p || !p.stock || size == null) return null;
+  const n = Number(p.stock[size]);
+  return Number.isFinite(n) ? n : null;
+}
+
 function addToCart(productId, size, colorHex, qty = 1) {
   const product = PRODUCTS.find(p => p.id === productId);
   if (!product) return;
+  const requestedQty = Math.max(1, Number(qty) || 1);
+  const stockForSize = getStockForSize(productId, size);
   const cart = getCart();
   const colorObj = product.colors.find(c => c.hex === colorHex) || product.colors[0];
   const existing = cart.find(i => i.id === productId && i.size === size && i.colorHex === colorObj.hex);
+  const existingQty = existing ? Number(existing.qty) || 0 : 0;
+
+  if (stockForSize != null && stockForSize <= existingQty) {
+    showToast("Selected size is out of stock");
+    return cart;
+  }
+
+  let qtyToAdd = requestedQty;
+  if (stockForSize != null) {
+    qtyToAdd = Math.min(requestedQty, Math.max(0, stockForSize - existingQty));
+    if (qtyToAdd < requestedQty) {
+      showToast(`Only ${Math.max(0, stockForSize - existingQty)} left for size ${size}`);
+    }
+    if (qtyToAdd <= 0) return cart;
+  }
+
   if (existing) {
-    existing.qty += qty;
+    existing.qty += qtyToAdd;
   } else {
     cart.push({
       id: productId,
@@ -418,7 +443,7 @@ function addToCart(productId, size, colorHex, qty = 1) {
       size,
       colorHex: colorObj.hex,
       colorName: colorObj.name,
-      qty,
+      qty: qtyToAdd,
       slug: product.slug
     });
   }
@@ -436,7 +461,16 @@ function removeFromCart(index) {
 function updateCartQty(index, delta) {
   const cart = getCart();
   if (!cart[index]) return;
-  cart[index].qty += delta;
+  const item = cart[index];
+  const nextQty = item.qty + delta;
+  if (delta > 0) {
+    const stockForSize = getStockForSize(item.id, item.size);
+    if (stockForSize != null && nextQty > stockForSize) {
+      showToast(`Only ${stockForSize} left for size ${item.size}`);
+      return;
+    }
+  }
+  item.qty = nextQty;
   if (cart[index].qty < 1) cart.splice(index, 1);
   saveCart(cart);
 }
@@ -604,6 +638,8 @@ function updateNavBadges() {
       el.classList.add("hidden");
     }
   });
+  // Notify any site-level listener (mobile CTA) about cart count
+  try { if (window.__site && typeof window.__site.updateCartCount === 'function') window.__site.updateCartCount(cartCount); } catch(_) {}
 }
 
 function productCardHTML(p) {
@@ -652,6 +688,10 @@ window.bitcToggleWish = function(id) {
     btn.classList.toggle("active", active);
     const svg = btn.querySelector("svg");
     if (svg) svg.setAttribute("fill", active ? "currentColor" : "none");
+    // brief pop feedback on toggle
+    btn.classList.remove("pop");
+    void btn.offsetWidth;
+    btn.classList.add("pop");
   });
   updateNavBadges();
 };

@@ -28,9 +28,14 @@
 
         <div>
           <!-- Order confirmation banner -->
-          <div id="orderSuccess" class="hidden" style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
-            <h3 style="font-family:var(--font-body);font-weight:600;color:#065F46;margin-bottom:0.35rem">Order placed successfully 🎉</h3>
-            <p style="font-size:0.875rem;color:#047857" id="orderSuccessMsg"></p>
+          <div id="orderSuccess" class="hidden order-confirm" style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+            <span class="order-confirm-check" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div>
+              <h3 style="font-family:var(--font-body);font-weight:600;color:#065F46;margin-bottom:0.35rem">Order placed successfully 🎉</h3>
+              <p style="font-size:0.875rem;color:#047857" id="orderSuccessMsg"></p>
+            </div>
           </div>
 
           <div class="account-panel" id="panelOrders">
@@ -97,20 +102,20 @@
         return;
       }
       el.innerHTML = orders.map(o => `
-        <div style="border:1px solid var(--border);border-radius:0.75rem;padding:1rem;margin-bottom:0.75rem">
-          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.5rem;margin-bottom:0.75rem">
-            <div>
-              <span style="font-weight:600;font-size:0.9rem">${o.id}</span>
-              <span style="font-size:0.75rem;color:#6B7280;margin-left:0.5rem">${new Date(o.date).toLocaleDateString("en-NG", { dateStyle: "medium" })}</span>
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-id">
+              <span class="order-ref">${o.id}</span>
+              <span class="order-date">${new Date(o.date).toLocaleDateString("en-NG", { dateStyle: "medium" })}</span>
             </div>
             <span class="badge badge-soft">${o.status}</span>
           </div>
-          <div style="font-size:0.8rem;color:#4B5563;margin-bottom:0.5rem">
+          <div class="order-items">
             ${o.items.map(i => `${i.name} (${i.size}) × ${i.qty}`).join(" · ")}
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.875rem">
-            <span>${o.delivery.state} · ${o.delivery.city}</span>
-            <span style="font-weight:600;color:var(--blush-600)">${formatPrice(o.total)}</span>
+          <div class="order-foot">
+            <span class="order-location">${o.delivery.state} · ${o.delivery.city}</span>
+            <span class="order-total">${formatPrice(o.total)}</span>
           </div>
         </div>
       `).join("");

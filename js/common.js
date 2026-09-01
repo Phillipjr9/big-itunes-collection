@@ -126,16 +126,16 @@ function renderFooter() {
           <a href="account.html">Contact Us</a>
           <a href="account.html">Track Order</a>
           <a href="index.html#size-guide">Size Guide</a>
-          <a href="#">Delivery Information</a>
-          <a href="#">Returns & Exchanges</a>
-          <a href="#">FAQs</a>
+          <a href="delivery.html">Delivery Information</a>
+          <a href="returns.html">Returns & Exchanges</a>
+          <a href="faqs.html">FAQs</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
           <a href="index.html#about">About Us</a>
           <a href="index.html#about">Our Story</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms & Conditions</a>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms & Conditions</a>
           <p style="margin-top:1rem;font-size:0.8rem;color:#9CA3AF">Lagos, Nigeria<br>hello@bigitunescollection.com</p>
         </div>
       </div>
@@ -168,6 +168,34 @@ function initCommon() {
       header.classList.toggle("scrolled", window.scrollY > 20);
     });
   }
+
+  // Expose a small API for hero and cart updates used by hero.js
+  window.__site = window.__site || {};
+  window.__site.updateCartCount = function(count){
+    document.querySelectorAll('[data-cart-count]').forEach(el => {
+      if ((count || 0) > 0) {
+        el.classList.remove('hidden');
+        el.textContent = count;
+      } else {
+        el.classList.add('hidden');
+      }
+    });
+    const mc = document.getElementById('mobileCartCount');
+    if(mc) {
+      mc.textContent = count || 0;
+      // animate pulse when count increases
+      try {
+        mc.classList.remove('pulse');
+        // force reflow then add
+        void mc.offsetWidth;
+        mc.classList.add('pulse');
+        setTimeout(()=> mc.classList.remove('pulse'), 900);
+      } catch(_) {}
+    }
+  };
+
+  // initialize cart count from localStorage
+  try{ const c = (typeof getCart === 'function' ? getCart() : []).reduce((s, i) => s + (Number(i.qty) || 0), 0); window.__site.updateCartCount(c); }catch(e){}
 
   updateNavBadges();
 }

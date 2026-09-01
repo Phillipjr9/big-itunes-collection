@@ -196,33 +196,73 @@
   <div id="site-header" data-active="home"></div>
 
   <section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+    </div>
     <div class="container">
       <div class="hero-grid">
-        <div>
+        <div class="glass-surface">
           <p style="font-size:0.75rem;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--blush-600)">Nigerian Women’s Fashion</p>
           <h1 class="font-display">Style Made<br />for <em style="color:var(--blush-600)">Her.</em></h1>
-          <p style="color:#4B5563;font-size:1.05rem;max-width:26rem;line-height:1.65;margin-bottom:1.5rem">
-            Discover beautiful women’s fashion designed to make every woman feel confident, stylish, and effortlessly beautiful.
+          <p class="hero-sub" style="color:#4B5563;font-size:1.05rem;max-width:26rem;line-height:1.5;margin-bottom:1rem">
+            Modern Nigerian womenswear — curated, ready-to-wear, delivered nationwide.
           </p>
-          <div style="display:flex;flex-wrap:wrap;gap:0.75rem">
-            <a href="shop.html" class="btn btn-primary btn-lg">Shop Women’s Collection</a>
-            <a href="shop.html?new=1" class="btn btn-outline btn-lg">Explore New Arrivals</a>
+          <div class="hero-ctas" style="display:flex;flex-wrap:wrap;gap:0.6rem">
+            <a href="shop.html" class="btn btn-primary btn-lg btn-cta">Shop Now</a>
+            <a href="shop.html?new=1" class="btn btn-outline btn-lg btn-cta">New Arrivals</a>
           </div>
-          <div style="display:flex;align-items:center;gap:1rem;margin-top:1.5rem;font-size:0.85rem;color:#6B7280">
+          <div class="hero-meta" style="display:flex;align-items:center;gap:1rem;margin-top:1.5rem;font-size:0.85rem;color:#6B7280">
             <span>★ 4.9 · 2,400+ reviews</span>
             <span style="width:1px;height:1rem;background:#D1D5DB"></span>
             <span>Nationwide delivery</span>
           </div>
+          <div class="quick-links" aria-label="Quick categories">
+            <a href="shop.html?category=dresses">Dresses</a>
+            <a href="shop.html?category=tops">Tops</a>
+            <a href="shop.html?category=bottoms">Bottoms</a>
+            <a href="shop.html?category=sets">Sets</a>
+            <a href="shop.html?category=jumpsuits">Jumpsuits</a>
+          </div>
         </div>
-        <div class="hero-img-wrap">
-          <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80" alt="Woman in elegant fashion" />
-          <div class="float-card" style="bottom:-0.5rem;left:-0.5rem;max-width:11rem">
+        <div class="hero-img-wrap" data-parallax="0.06">
+          <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80"
+               srcset="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=480&q=60 480w, https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80 800w, https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80 1200w, https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1600&q=80 1600w"
+               sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 28rem"
+               loading="lazy"
+               alt="Woman in elegant fashion" />
+          <div class="float-card glass-surface" style="bottom:-0.5rem;left:-0.5rem;max-width:11rem">
             <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=100&q=80" alt="" style="width:3.25rem;height:3.25rem;border-radius:0.6rem;object-fit:cover" />
             <div>
               <p style="font-size:0.7rem;font-weight:500;line-height:1.2">Silk Midi Dress</p>
               <p style="font-size:0.85rem;font-weight:600;color:var(--blush-600)">₦28,500</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-soft" id="hero-testimonials" aria-label="Testimonials">
+    <div class="container">
+      <div class="testimonial-carousel" id="testimonialCarousel">
+        <blockquote class="testimonial active">
+          <p>"Beautiful quality and fast delivery — I got so many compliments!"</p>
+          <footer>— Aisha, Lagos</footer>
+        </blockquote>
+        <blockquote class="testimonial">
+          <p>"The fit was perfect and the customer service helped with sizing."</p>
+          <footer>— Chiamaka, Abuja</footer>
+        </blockquote>
+        <blockquote class="testimonial">
+          <p>"Lovely fabrics and flattering cuts. My go-to boutique now."</p>
+          <footer>— Naomi, Port Harcourt</footer>
+        </blockquote>
+        <div class="testimonial-controls" aria-hidden="false">
+          <button class="testimonial-prev" aria-label="Previous testimonial">◀</button>
+          <div class="testimonial-dots" role="tablist" aria-label="Testimonial navigation"></div>
+          <button class="testimonial-next" aria-label="Next testimonial">▶</button>
         </div>
       </div>
     </div>
@@ -402,6 +442,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/common.js"></script>
+  <script src="js/hero.js"></script>
   <script>
     const featured = PRODUCTS.filter(p => p.isBestseller || p.isNew).slice(0, 4);
     const news = PRODUCTS.filter(p => p.isNew).slice(0, 4);
