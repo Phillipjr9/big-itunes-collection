@@ -1,6 +1,9 @@
 {
   "framework": null,
-  "buildCommand": false,
+  "buildCommand": null,
   "outputDirectory": ".",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ]
 }
