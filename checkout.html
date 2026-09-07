@@ -84,6 +84,10 @@
               <input type="radio" name="payment" value="pod" id="payPod" style="accent-color:var(--blush-500)" />
               <span style="font-size:0.875rem">Pay on Delivery / Bank Transfer</span>
             </label>
+            <div id="bankTransferBox" class="hidden" style="margin:0 0 0.75rem;padding:0.85rem 1rem;background:var(--blush-50);border:1px solid #FBCFE8;border-radius:0.75rem;font-size:0.8rem">
+              <p style="font-weight:600;color:#9D174D;margin-bottom:0.35rem">Bank transfer details</p>
+              <div id="bankTransferDetails" style="color:#4B5563;line-height:1.55"></div>
+            </div>
             <label id="payCardLabel" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;border:1px solid #E5E7EB;border-radius:0.75rem;cursor:pointer">
               <input type="radio" name="payment" value="card" id="payCard" checked style="accent-color:var(--blush-500)" />
               <span style="font-size:0.875rem">Pay with Card / Bank / USSD (Paystack)</span>
@@ -91,10 +95,7 @@
             <p id="paystackHint" style="font-size:0.75rem;color:#9CA3AF;margin-top:0.5rem"></p>
             <div id="paystackKeyBox" class="hidden" style="margin-top:1rem;padding:1rem;background:#FFF7ED;border:1px solid #FED7AA;border-radius:0.75rem">
               <p style="font-size:0.8rem;font-weight:600;color:#9A3412;margin-bottom:0.5rem">Enable card pay — paste Paystack public key</p>
-              <p style="font-size:0.72rem;color:#9A3412;margin-bottom:0.75rem">
-                Use <code>pk_test_…</code> or <code>pk_live_…</code> only.
-                The secret key (<code>sk_…</code>) goes in Vercel env, not here.
-              </p>
+              <p style="font-size:0.72rem;color:#9A3412;margin-bottom:0.75rem">Use <code>pk_test_…</code> or <code>pk_live_…</code> only (not account number).</p>
               <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
                 <input type="text" id="checkoutPaystackKey" class="form-input" placeholder="pk_live_… or pk_test_…" style="flex:1;min-width:12rem;font-size:0.8rem" autocomplete="off" />
                 <button type="button" class="btn btn-primary btn-sm" id="saveCheckoutPaystackKey">Save & enable card</button>
@@ -135,14 +136,14 @@
         paystackReady = typeof isPaystackConfigured === "function" && isPaystackConfigured();
         if (paystackReady) {
           note.innerHTML = '<span style="color:#065F46">✓ Paystack is connected. Card, bank transfer, and USSD are available.</span>';
-          hint.textContent = "Secure Paystack window · payment is verified on our server before the order is confirmed.";
+          hint.textContent = "Secure Paystack window · server-verified after payment.";
           payCard.disabled = false;
           payCard.checked = true;
           document.getElementById("payCardLabel").style.opacity = "1";
           document.getElementById("payCardLabel").style.cursor = "pointer";
           if (keyBox) keyBox.classList.add("hidden");
         } else {
-          note.innerHTML = '<span style="color:#B45309"><strong>Card pay is waiting for your public key.</strong> Paste <code>pk_test_…</code> or <code>pk_live_…</code> below (or in Admin → Settings). Secret key (<code>sk_…</code>) is only for Vercel — it does not enable card pay by itself.</span>';
+          note.innerHTML = '<span style="color:#B45309"><strong>Card pay needs your public key.</strong> Paste <code>pk_test_…</code> or <code>pk_live_…</code> below. Account number is for bank transfer only.</span>';
           hint.textContent = "Until a public key is saved, only Pay on Delivery works.";
           payPod.checked = true;
           payCard.disabled = true;
@@ -162,7 +163,7 @@
           const err = document.getElementById("checkoutPaystackKeyError");
           if (raw.startsWith("sk_")) {
             err.style.display = "block";
-            err.textContent = "That is a secret key. Use the public key that starts with pk_ only.";
+            err.textContent = "That is a secret key. Use the public key (pk_) only.";
             return;
           }
           if (!raw.startsWith("pk_test_") && !raw.startsWith("pk_live_")) {
@@ -178,6 +179,29 @@
         };
       }
 
+      function renderBankTransferBox() {
+        const box = document.getElementById("bankTransferBox");
+        const details = document.getElementById("bankTransferDetails");
+        const method = (document.querySelector('input[name="payment"]:checked') || {}).value || "pod";
+        if (!box || !details) return;
+        if (method !== "pod") {
+          box.classList.add("hidden");
+          return;
+        }
+        const bank = typeof getBankTransferDetails === "function" ? getBankTransferDetails() : {};
+        const hasAny = bank.bankName || bank.accountName || bank.accountNumber;
+        if (!hasAny) {
+          details.innerHTML = '<span style="color:#B45309">No bank account set. Open <strong>Admin → Settings</strong>, enter bank name / account name / account number, then Save.</span>';
+        } else {
+          details.innerHTML =
+            (bank.bankName ? '<div><span style="color:#9CA3AF">Bank:</span> <strong>' + bank.bankName + '</strong></div>' : '') +
+            (bank.accountName ? '<div><span style="color:#9CA3AF">Account name:</span> <strong>' + bank.accountName + '</strong></div>' : '') +
+            (bank.accountNumber ? '<div><span style="color:#9CA3AF">Account number:</span> <strong style="letter-spacing:0.04em">' + bank.accountNumber + '</strong></div>' : '') +
+            '<p style="font-size:0.72rem;color:#6B7280;margin-top:0.5rem">Transfer the order total and use your order ID as narration.</p>';
+        }
+        box.classList.remove("hidden");
+      }
+
       function updateSummary() {
         const state = document.getElementById("stateSelect").value;
         const subtotal = getCartSubtotal();
@@ -185,51 +209,45 @@
         const total = subtotal + delivery;
         const freeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
         const method = (document.querySelector('input[name="payment"]:checked') || {}).value || "pod";
+        renderBankTransferBox();
 
         const est = document.getElementById("deliveryEstimate");
         if (state) {
           est.style.display = "block";
           const days = state === "Lagos" ? "1–3" : state.includes("Abuja") || state.includes("Ibadan") ? "2–4" : "3–6";
-          est.innerHTML = `<strong>Delivery to ${state}:</strong> ${freeShip ? "FREE" : formatPrice(delivery)} · Estimated ${days} business days`;
+          est.innerHTML = '<strong>Delivery to ' + state + ':</strong> ' + (freeShip ? "FREE" : formatPrice(delivery)) + ' · Estimated ' + days + ' business days';
         } else {
           est.style.display = "none";
         }
 
         const btnLabel = method === "card" && paystackReady ? "Pay with Paystack" : "Place Order";
-
-        document.getElementById("orderSummary").innerHTML = `
-          <h3 style="font-family:var(--font-body);font-weight:600;margin-bottom:1rem">Order Summary</h3>
-          <div style="max-height:220px;overflow-y:auto;margin-bottom:1rem">
-            ${cart.map(i => `
-              <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;font-size:0.8rem">
-                <img src="${i.image}" alt="" style="width:3.5rem;height:4.25rem;object-fit:cover;border-radius:0.5rem" />
-                <div style="flex:1">
-                  <p style="font-weight:500">${i.name}</p>
-                  <p style="color:#6B7280">${i.size} · ${i.colorName || ""} × ${i.qty}</p>
-                  <p style="font-weight:600;color:var(--blush-600)">${formatPrice(i.price * i.qty)}</p>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-          <div class="summary-row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
-          <div class="summary-row">
-            <span>Delivery ${state ? `(${state})` : ""}</span>
-            <span>${!state ? "Select state" : freeShip ? "FREE" : formatPrice(delivery)}</span>
-          </div>
-          ${freeShip ? '<p style="font-size:0.75rem;color:#065F46;margin-bottom:0.5rem">🎉 Free nationwide delivery unlocked</p>' : ""}
-          <div class="summary-total"><span>Total</span><span id="grandTotal">${formatPrice(total)}</span></div>
-          <button type="submit" class="btn btn-primary btn-block btn-lg" id="placeOrderBtn" style="margin-top:1.25rem">${btnLabel}</button>
-          <p style="font-size:0.7rem;color:#9CA3AF;text-align:center;margin-top:0.75rem">
-            ${method === "card" && paystackReady ? "Secured by Paystack · Cards, bank, USSD" : "You will receive order confirmation after placing"}
-          </p>
-        `;
+        document.getElementById("orderSummary").innerHTML =
+          '<h3 style="font-family:var(--font-body);font-weight:600;margin-bottom:1rem">Order Summary</h3>' +
+          '<div style="max-height:220px;overflow-y:auto;margin-bottom:1rem">' +
+          cart.map(function (i) {
+            return '<div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;font-size:0.8rem">' +
+              '<img src="' + i.image + '" alt="" style="width:3.5rem;height:4.25rem;object-fit:cover;border-radius:0.5rem" />' +
+              '<div style="flex:1"><p style="font-weight:500">' + i.name + '</p>' +
+              '<p style="color:#6B7280">' + i.size + ' · ' + (i.colorName || "") + ' × ' + i.qty + '</p>' +
+              '<p style="font-weight:600;color:var(--blush-600)">' + formatPrice(i.price * i.qty) + '</p></div></div>';
+          }).join("") +
+          '</div>' +
+          '<div class="summary-row"><span>Subtotal</span><span>' + formatPrice(subtotal) + '</span></div>' +
+          '<div class="summary-row"><span>Delivery' + (state ? ' (' + state + ')' : '') + '</span><span>' +
+          (!state ? "Select state" : freeShip ? "FREE" : formatPrice(delivery)) + '</span></div>' +
+          (freeShip ? '<p style="font-size:0.75rem;color:#065F46;margin-bottom:0.5rem">Free nationwide delivery unlocked</p>' : '') +
+          '<div class="summary-total"><span>Total</span><span>' + formatPrice(total) + '</span></div>' +
+          '<button type="submit" class="btn btn-primary btn-block btn-lg" id="placeOrderBtn" style="margin-top:1.25rem">' + btnLabel + '</button>';
       }
 
       document.getElementById("stateSelect").addEventListener("change", updateSummary);
-      document.querySelectorAll('input[name="payment"]').forEach(r => r.addEventListener("change", updateSummary));
+      document.querySelectorAll('input[name="payment"]').forEach(function (r) {
+        r.addEventListener("change", updateSummary);
+      });
       updateSummary();
 
-      function buildOrderFromForm(form, paymentMeta = {}) {
+      function buildOrderFromForm(form, paymentMeta) {
+        paymentMeta = paymentMeta || {};
         const fd = new FormData(form);
         const state = fd.get("state");
         const subtotal = getCartSubtotal();
@@ -240,14 +258,13 @@
           items: getCart(),
           customer: { name: fd.get("name"), phone: fd.get("phone"), email: fd.get("email") },
           delivery: {
-            state, city: fd.get("city"), address: fd.get("address"),
+            state: state, city: fd.get("city"), address: fd.get("address"),
             landmark: fd.get("landmark"), instructions: fd.get("instructions"), fee: delivery
           },
           payment: fd.get("payment"),
           paymentStatus: paymentMeta.paymentStatus || (fd.get("payment") === "card" ? "pending" : "pod"),
           paystackRef: paymentMeta.paystackRef || null,
-          paystackChannel: paymentMeta.paystackChannel || null,
-          subtotal,
+          subtotal: subtotal,
           total: subtotal + delivery,
           status: "Processing",
           statusHistory: [{
@@ -271,25 +288,18 @@
       }
 
       async function verifyPaystackOnServer(reference, amountNaira, orderId) {
-        const endpoints = ["/api/verify-paystack", "/api/verify-paystack.js"];
-        let lastError = "Verification failed";
-        for (const url of endpoints) {
-          try {
-            const res = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reference, amount: amountNaira, orderId })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok && data.verified) return data;
-            lastError = data.error || lastError;
-            if (res.status === 404) continue;
-            return data;
-          } catch (err) {
-            lastError = err.message || "Network error during verification";
-          }
+        try {
+          const res = await fetch("/api/verify-paystack", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: reference, amount: amountNaira, orderId: orderId })
+          });
+          const data = await res.json().catch(function () { return {}; });
+          if (res.ok && data.verified) return data;
+          return { verified: false, error: data.error || "Verification failed" };
+        } catch (err) {
+          return { verified: false, error: err.message || "Network error" };
         }
-        return { verified: false, error: lastError };
       }
 
       function resetPayButton() {
@@ -303,7 +313,7 @@
       function payWithPaystack(order) {
         const key = getPaystackPublicKey();
         if (!key || typeof PaystackPop === "undefined") {
-          showToast("Paystack is not available. Choose Pay on Delivery or set your public key.");
+          showToast("Paystack is not available. Set your public key or use Pay on Delivery.");
           resetPayButton();
           return;
         }
@@ -322,9 +332,7 @@
           ref: paymentRef,
           metadata: {
             custom_fields: [
-              { display_name: "Order ID", variable_name: "order_id", value: order.id },
-              { display_name: "Customer Phone", variable_name: "phone", value: order.customer.phone || "" },
-              { display_name: "Delivery State", variable_name: "state", value: order.delivery.state || "" }
+              { display_name: "Order ID", variable_name: "order_id", value: order.id }
             ]
           },
           callback: function (response) {
@@ -334,35 +342,25 @@
               btn.disabled = true;
               btn.textContent = "Verifying payment…";
             }
-            showToast("Confirming payment with Paystack…");
-            verifyPaystackOnServer(reference, order.total, order.id).then((result) => {
+            showToast("Confirming payment…");
+            verifyPaystackOnServer(reference, order.total, order.id).then(function (result) {
               if (!result || !result.verified) {
-                order.paymentStatus = "unverified";
-                order.paystackRef = reference;
-                order.statusHistory.push({
-                  status: "Processing",
-                  at: new Date().toISOString(),
-                  by: "System",
-                  note: "Server verification failed: " + (result && result.error ? result.error : "unknown")
-                });
-                showToast(result && result.error ? ("Payment could not be verified: " + result.error) : "Payment could not be verified on the server");
+                showToast(result && result.error ? ("Could not verify: " + result.error) : "Payment not verified");
                 resetPayButton();
                 return;
               }
               order.paymentStatus = "paid";
               order.paystackRef = result.reference || reference;
-              order.paystackChannel = result.channel || null;
               order.paymentVerified = true;
-              order.paidAt = result.paidAt || new Date().toISOString();
               order.statusHistory.push({
                 status: "Processing",
                 at: new Date().toISOString(),
                 by: "Paystack",
-                note: "Payment verified on server · ref " + (result.reference || reference) + (result.channel ? " · " + result.channel : "")
+                note: "Payment verified · ref " + (result.reference || reference)
               });
-              showToast("Payment verified 💕");
+              showToast("Payment verified");
               finalizeOrder(order);
-            }).catch((err) => {
+            }).catch(function (err) {
               showToast("Verification error: " + (err.message || "network"));
               resetPayButton();
             });
@@ -375,7 +373,7 @@
         handler.openIframe();
       }
 
-      document.getElementById("checkoutForm").onsubmit = (e) => {
+      document.getElementById("checkoutForm").onsubmit = function (e) {
         e.preventDefault();
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
@@ -384,20 +382,10 @@
           submitBtn.disabled = true;
           submitBtn.textContent = method === "card" ? "Opening Paystack…" : "Placing order…";
         }
-        const latestCart = getCart();
-        const stockIssue = latestCart.find(i => {
-          const available = typeof getStockForSize === "function" ? getStockForSize(i.id, i.size) : null;
-          return available != null && i.qty > available;
-        });
-        if (stockIssue) {
-          if (submitBtn) { submitBtn.disabled = false; updateSummary(); }
-          showToast(`Only ${getStockForSize(stockIssue.id, stockIssue.size)} left for ${stockIssue.name} (${stockIssue.size})`);
-          return;
-        }
         if (method === "card") {
           if (!paystackReady) {
             if (submitBtn) { submitBtn.disabled = false; updateSummary(); }
-            showToast("Paste your Paystack public key (pk_…) below to enable card pay");
+            showToast("Paste your Paystack public key (pk_) to enable card pay");
             return;
           }
           const order = buildOrderFromForm(form, { paymentStatus: "pending", note: "Awaiting Paystack payment" });
