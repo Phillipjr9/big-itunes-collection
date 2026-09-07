@@ -89,6 +89,18 @@
               <span style="font-size:0.875rem">Pay with Card / Bank / USSD (Paystack)</span>
             </label>
             <p id="paystackHint" style="font-size:0.75rem;color:#9CA3AF;margin-top:0.5rem"></p>
+            <div id="paystackKeyBox" class="hidden" style="margin-top:1rem;padding:1rem;background:#FFF7ED;border:1px solid #FED7AA;border-radius:0.75rem">
+              <p style="font-size:0.8rem;font-weight:600;color:#9A3412;margin-bottom:0.5rem">Enable card pay — paste Paystack public key</p>
+              <p style="font-size:0.72rem;color:#9A3412;margin-bottom:0.75rem">
+                Use <code>pk_test_…</code> or <code>pk_live_…</code> only.
+                The secret key (<code>sk_…</code>) goes in Vercel env, not here.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+                <input type="text" id="checkoutPaystackKey" class="form-input" placeholder="pk_live_… or pk_test_…" style="flex:1;min-width:12rem;font-size:0.8rem" autocomplete="off" />
+                <button type="button" class="btn btn-primary btn-sm" id="saveCheckoutPaystackKey">Save & enable card</button>
+              </div>
+              <p id="checkoutPaystackKeyError" style="font-size:0.75rem;color:#DC2626;margin-top:0.5rem;display:none"></p>
+            </div>
           </div>
         </div>
 
@@ -102,35 +114,68 @@
   <div id="site-footer"></div>
   <div id="toast" class="toast"></div>
 
+  <script src="js/site-config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/paystack-config.js"></script>
   <script src="js/common.js"></script>
   <script>
-    // Optional: window.BITC_PAYSTACK_PUBLIC_KEY = "pk_live_xxxxxxxx";
-    // Prefer Admin → Settings → Paystack Public Key
-
     const cart = getCart();
     if (cart.length === 0) {
       document.getElementById("checkoutEmpty").classList.remove("hidden");
       document.getElementById("checkoutForm").classList.add("hidden");
     } else {
-      const paystackReady = typeof isPaystackConfigured === "function" && isPaystackConfigured();
+      let paystackReady = typeof isPaystackConfigured === "function" && isPaystackConfigured();
       const note = document.getElementById("paystackStatusNote");
       const hint = document.getElementById("paystackHint");
       const payCard = document.getElementById("payCard");
       const payPod = document.getElementById("payPod");
+      const keyBox = document.getElementById("paystackKeyBox");
 
-      if (paystackReady) {
-        note.innerHTML = '<span style="color:#065F46">✓ Paystack is connected. Card, bank transfer, and USSD are available.</span>';
-        hint.textContent = "Secure Paystack window · payment is verified on our server before the order is confirmed.";
-        payCard.checked = true;
-      } else {
-        note.innerHTML = '<span style="color:#B45309">Paystack public key is not set yet. Add <code>pk_live_…</code> or <code>pk_test_…</code> in Admin → Settings.</span>';
-        hint.textContent = "Until a public key is configured, use Pay on Delivery.";
-        payPod.checked = true;
-        payCard.disabled = true;
-        document.getElementById("payCardLabel").style.opacity = "0.55";
-        document.getElementById("payCardLabel").style.cursor = "not-allowed";
+      function applyPaystackUiState() {
+        paystackReady = typeof isPaystackConfigured === "function" && isPaystackConfigured();
+        if (paystackReady) {
+          note.innerHTML = '<span style="color:#065F46">✓ Paystack is connected. Card, bank transfer, and USSD are available.</span>';
+          hint.textContent = "Secure Paystack window · payment is verified on our server before the order is confirmed.";
+          payCard.disabled = false;
+          payCard.checked = true;
+          document.getElementById("payCardLabel").style.opacity = "1";
+          document.getElementById("payCardLabel").style.cursor = "pointer";
+          if (keyBox) keyBox.classList.add("hidden");
+        } else {
+          note.innerHTML = '<span style="color:#B45309"><strong>Card pay is waiting for your public key.</strong> Paste <code>pk_test_…</code> or <code>pk_live_…</code> below (or in Admin → Settings). Secret key (<code>sk_…</code>) is only for Vercel — it does not enable card pay by itself.</span>';
+          hint.textContent = "Until a public key is saved, only Pay on Delivery works.";
+          payPod.checked = true;
+          payCard.disabled = true;
+          document.getElementById("payCardLabel").style.opacity = "0.55";
+          document.getElementById("payCardLabel").style.cursor = "not-allowed";
+          if (keyBox) keyBox.classList.remove("hidden");
+        }
+        if (typeof updateSummary === "function") updateSummary();
+      }
+
+      applyPaystackUiState();
+
+      const saveKeyBtn = document.getElementById("saveCheckoutPaystackKey");
+      if (saveKeyBtn) {
+        saveKeyBtn.onclick = () => {
+          const raw = (document.getElementById("checkoutPaystackKey").value || "").trim();
+          const err = document.getElementById("checkoutPaystackKeyError");
+          if (raw.startsWith("sk_")) {
+            err.style.display = "block";
+            err.textContent = "That is a secret key. Use the public key that starts with pk_ only.";
+            return;
+          }
+          if (!raw.startsWith("pk_test_") && !raw.startsWith("pk_live_")) {
+            err.style.display = "block";
+            err.textContent = "Key must start with pk_test_ or pk_live_";
+            return;
+          }
+          err.style.display = "none";
+          setPaystackPublicKey(raw);
+          window.BITC_PAYSTACK_PUBLIC_KEY = raw;
+          showToast("Paystack public key saved — card pay enabled");
+          applyPaystackUiState();
+        };
       }
 
       function updateSummary() {
@@ -175,7 +220,7 @@
           <div class="summary-total"><span>Total</span><span id="grandTotal">${formatPrice(total)}</span></div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="placeOrderBtn" style="margin-top:1.25rem">${btnLabel}</button>
           <p style="font-size:0.7rem;color:#9CA3AF;text-align:center;margin-top:0.75rem">
-            ${method === "card" && paystackReady ? "Secured by Paystack · server-verified" : "You will receive order confirmation after placing"}
+            ${method === "card" && paystackReady ? "Secured by Paystack · Cards, bank, USSD" : "You will receive order confirmation after placing"}
           </p>
         `;
       }
@@ -262,16 +307,13 @@
           resetPayButton();
           return;
         }
-
         const amountKobo = Math.round(Number(order.total) * 100);
         if (!amountKobo || amountKobo < 100) {
           showToast("Invalid payment amount");
           resetPayButton();
           return;
         }
-
         const paymentRef = order.id + "-" + Date.now().toString(36);
-
         const handler = PaystackPop.setup({
           key: key,
           email: order.customer.email,
@@ -293,7 +335,6 @@
               btn.textContent = "Verifying payment…";
             }
             showToast("Confirming payment with Paystack…");
-
             verifyPaystackOnServer(reference, order.total, order.id).then((result) => {
               if (!result || !result.verified) {
                 order.paymentStatus = "unverified";
@@ -302,16 +343,12 @@
                   status: "Processing",
                   at: new Date().toISOString(),
                   by: "System",
-                  note: "Paystack popup returned success but server verification failed: " +
-                    (result && result.error ? result.error : "unknown")
+                  note: "Server verification failed: " + (result && result.error ? result.error : "unknown")
                 });
-                showToast(result && result.error
-                  ? ("Payment could not be verified: " + result.error)
-                  : "Payment could not be verified on the server");
+                showToast(result && result.error ? ("Payment could not be verified: " + result.error) : "Payment could not be verified on the server");
                 resetPayButton();
                 return;
               }
-
               order.paymentStatus = "paid";
               order.paystackRef = result.reference || reference;
               order.paystackChannel = result.channel || null;
@@ -321,8 +358,7 @@
                 status: "Processing",
                 at: new Date().toISOString(),
                 by: "Paystack",
-                note: "Payment verified on server · ref " + (result.reference || reference) +
-                  (result.channel ? " · " + result.channel : "")
+                note: "Payment verified on server · ref " + (result.reference || reference) + (result.channel ? " · " + result.channel : "")
               });
               showToast("Payment verified 💕");
               finalizeOrder(order);
@@ -344,12 +380,10 @@
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
         const method = (form.querySelector('input[name="payment"]:checked') || {}).value || "pod";
-
         if (submitBtn) {
           submitBtn.disabled = true;
           submitBtn.textContent = method === "card" ? "Opening Paystack…" : "Placing order…";
         }
-
         const latestCart = getCart();
         const stockIssue = latestCart.find(i => {
           const available = typeof getStockForSize === "function" ? getStockForSize(i.id, i.size) : null;
@@ -360,21 +394,16 @@
           showToast(`Only ${getStockForSize(stockIssue.id, stockIssue.size)} left for ${stockIssue.name} (${stockIssue.size})`);
           return;
         }
-
         if (method === "card") {
           if (!paystackReady) {
             if (submitBtn) { submitBtn.disabled = false; updateSummary(); }
-            showToast("Set your Paystack public key in Admin → Settings first");
+            showToast("Paste your Paystack public key (pk_…) below to enable card pay");
             return;
           }
-          const order = buildOrderFromForm(form, {
-            paymentStatus: "pending",
-            note: "Awaiting Paystack payment"
-          });
+          const order = buildOrderFromForm(form, { paymentStatus: "pending", note: "Awaiting Paystack payment" });
           payWithPaystack(order);
           return;
         }
-
         const order = buildOrderFromForm(form, {
           paymentStatus: "pod",
           note: "Order placed · Pay on delivery / bank transfer"
