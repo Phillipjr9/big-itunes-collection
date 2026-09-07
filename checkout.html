@@ -74,8 +74,7 @@
               <label class="form-label">Delivery Instructions</label>
               <textarea name="instructions" rows="2" class="form-textarea" placeholder="Any special instructions (optional)"></textarea>
             </div>
-            <div id="deliveryEstimate" style="font-size:0.85rem;color:#4B5563;background:var(--blush-50);padding:0.75rem 1rem;border-radius:0.75rem;display:none">
-            </div>
+            <div id="deliveryEstimate" style="font-size:0.85rem;color:#4B5563;background:var(--blush-50);padding:0.75rem 1rem;border-radius:0.75rem;display:none"></div>
           </div>
 
           <div class="checkout-section">
@@ -94,8 +93,7 @@
         </div>
 
         <div>
-          <div class="cart-summary" id="orderSummary">
-          </div>
+          <div class="cart-summary" id="orderSummary"></div>
         </div>
       </form>
     </div>
@@ -108,7 +106,7 @@
   <script src="js/paystack-config.js"></script>
   <script src="js/common.js"></script>
   <script>
-    // Optional hard override: window.BITC_PAYSTACK_PUBLIC_KEY = "pk_live_xxxxxxxx";
+    // Optional: window.BITC_PAYSTACK_PUBLIC_KEY = "pk_live_xxxxxxxx";
     // Prefer Admin → Settings → Paystack Public Key
 
     const cart = getCart();
@@ -124,10 +122,10 @@
 
       if (paystackReady) {
         note.innerHTML = '<span style="color:#065F46">✓ Paystack is connected. Card, bank transfer, and USSD are available.</span>';
-        hint.textContent = "You will be redirected to a secure Paystack payment window.";
+        hint.textContent = "Secure Paystack window · payment is verified on our server before the order is confirmed.";
         payCard.checked = true;
       } else {
-        note.innerHTML = '<span style="color:#B45309">Paystack public key is not set yet. Add <code>pk_live_…</code> or <code>pk_test_…</code> in Admin → Settings, or set <code>window.BITC_PAYSTACK_PUBLIC_KEY</code> on this page.</span>';
+        note.innerHTML = '<span style="color:#B45309">Paystack public key is not set yet. Add <code>pk_live_…</code> or <code>pk_test_…</code> in Admin → Settings.</span>';
         hint.textContent = "Until a public key is configured, use Pay on Delivery.";
         payPod.checked = true;
         payCard.disabled = true;
@@ -177,7 +175,7 @@
           <div class="summary-total"><span>Total</span><span id="grandTotal">${formatPrice(total)}</span></div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="placeOrderBtn" style="margin-top:1.25rem">${btnLabel}</button>
           <p style="font-size:0.7rem;color:#9CA3AF;text-align:center;margin-top:0.75rem">
-            ${method === "card" && paystackReady ? "Secured by Paystack · Cards, bank, USSD" : "You will receive order confirmation after placing"}
+            ${method === "card" && paystackReady ? "Secured by Paystack · server-verified" : "You will receive order confirmation after placing"}
           </p>
         `;
       }
@@ -227,23 +225,59 @@
         location.href = "account.html?order=" + order.id;
       }
 
+      async function verifyPaystackOnServer(reference, amountNaira, orderId) {
+        const endpoints = ["/api/verify-paystack", "/api/verify-paystack.js"];
+        let lastError = "Verification failed";
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reference, amount: amountNaira, orderId })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.verified) return data;
+            lastError = data.error || lastError;
+            if (res.status === 404) continue;
+            return data;
+          } catch (err) {
+            lastError = err.message || "Network error during verification";
+          }
+        }
+        return { verified: false, error: lastError };
+      }
+
+      function resetPayButton() {
+        const btn = document.getElementById("placeOrderBtn");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Pay with Paystack";
+        }
+      }
+
       function payWithPaystack(order) {
         const key = getPaystackPublicKey();
         if (!key || typeof PaystackPop === "undefined") {
           showToast("Paystack is not available. Choose Pay on Delivery or set your public key.");
+          resetPayButton();
           return;
         }
+
         const amountKobo = Math.round(Number(order.total) * 100);
         if (!amountKobo || amountKobo < 100) {
           showToast("Invalid payment amount");
+          resetPayButton();
           return;
         }
+
+        const paymentRef = order.id + "-" + Date.now().toString(36);
+
         const handler = PaystackPop.setup({
           key: key,
           email: order.customer.email,
           amount: amountKobo,
           currency: "NGN",
-          ref: order.id + "-" + Date.now().toString(36),
+          ref: paymentRef,
           metadata: {
             custom_fields: [
               { display_name: "Order ID", variable_name: "order_id", value: order.id },
@@ -252,20 +286,53 @@
             ]
           },
           callback: function (response) {
-            order.paymentStatus = "paid";
-            order.paystackRef = response.reference;
-            order.statusHistory.push({
-              status: "Processing",
-              at: new Date().toISOString(),
-              by: "Paystack",
-              note: "Payment successful · ref " + response.reference
+            const reference = response.reference || paymentRef;
+            const btn = document.getElementById("placeOrderBtn");
+            if (btn) {
+              btn.disabled = true;
+              btn.textContent = "Verifying payment…";
+            }
+            showToast("Confirming payment with Paystack…");
+
+            verifyPaystackOnServer(reference, order.total, order.id).then((result) => {
+              if (!result || !result.verified) {
+                order.paymentStatus = "unverified";
+                order.paystackRef = reference;
+                order.statusHistory.push({
+                  status: "Processing",
+                  at: new Date().toISOString(),
+                  by: "System",
+                  note: "Paystack popup returned success but server verification failed: " +
+                    (result && result.error ? result.error : "unknown")
+                });
+                showToast(result && result.error
+                  ? ("Payment could not be verified: " + result.error)
+                  : "Payment could not be verified on the server");
+                resetPayButton();
+                return;
+              }
+
+              order.paymentStatus = "paid";
+              order.paystackRef = result.reference || reference;
+              order.paystackChannel = result.channel || null;
+              order.paymentVerified = true;
+              order.paidAt = result.paidAt || new Date().toISOString();
+              order.statusHistory.push({
+                status: "Processing",
+                at: new Date().toISOString(),
+                by: "Paystack",
+                note: "Payment verified on server · ref " + (result.reference || reference) +
+                  (result.channel ? " · " + result.channel : "")
+              });
+              showToast("Payment verified 💕");
+              finalizeOrder(order);
+            }).catch((err) => {
+              showToast("Verification error: " + (err.message || "network"));
+              resetPayButton();
             });
-            showToast("Payment successful 💕");
-            finalizeOrder(order);
           },
           onClose: function () {
-            const btn = document.getElementById("placeOrderBtn");
-            if (btn) { btn.disabled = false; btn.textContent = "Pay with Paystack"; }
+            resetPayButton();
             showToast("Payment window closed — order not placed");
           }
         });
@@ -300,7 +367,10 @@
             showToast("Set your Paystack public key in Admin → Settings first");
             return;
           }
-          const order = buildOrderFromForm(form, { paymentStatus: "pending", note: "Awaiting Paystack payment" });
+          const order = buildOrderFromForm(form, {
+            paymentStatus: "pending",
+            note: "Awaiting Paystack payment"
+          });
           payWithPaystack(order);
           return;
         }
